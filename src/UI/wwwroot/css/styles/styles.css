@@ -1,0 +1,37 @@
+@media (min-width: 700px) and (orientation: landscape) {
+   .card {
+      max-width: 650px;
+      margin: 60px;
+   }
+}
+
+@media (max-width: 876px) {
+   .spacing {
+      margin-top: 50%;
+   }
+}
+
+.card{
+   border-color: #cccccc;
+   border-radius: 8px;   
+}
+
+.btn-primary {
+   background-color: #004587 !important;
+   border-radius: 10px;
+}
+
+.btn-primary:hover {
+   background-color: #074986 !important;
+   border-color: #004587 !important;
+   color: white !important;
+}
+
+.bi {
+   background-color: #ffffff00;
+   border-right: none;
+}
+
+.form-control {
+   border-left: none;
+}

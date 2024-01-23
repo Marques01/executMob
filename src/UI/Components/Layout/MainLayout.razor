@@ -1,0 +1,50 @@
+﻿@using Infrastructure
+@using Infrastructure.Extensions
+@inherits LayoutComponentBase
+@inject IJSRuntime _js
+@inject IDialogService _dialogServices
+@inject NavigationManager _navigationManager
+
+<AuthorizeView>
+    <Authorized>
+        <body class="p-4 m-0 border-0 bd-example">
+            <div class="mb-5">
+                <NavMenu />
+            </div>
+            <div class="">
+                @Body
+                <FluentDialogProvider />
+                <FluentTooltipProvider />
+            </div>
+        </body>
+    </Authorized>
+
+    <NotAuthorized>
+        <FluentDialogProvider />
+        <FluentTooltipProvider />
+        <Login />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    private string _token = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _token = await _js.GetFromLocalStorage(TokenAuthenticationProvider.TokenKey);
+
+        bool tokenIsValid = JwtUtils.CheckTokenIsValid(_token);
+
+        if (!tokenIsValid && !_navigationManager.Uri.Contains("login"))
+        {
+            await _dialogServices.ShowInfoAsync("Desculpe, sua sessão expirou. Por favor, faça login para continuar.", "Atenção");
+            _navigationManager.NavigateTo("/login", true);
+        }
+
+        if (firstRender)
+        {
+            
+        }
+    }
+}

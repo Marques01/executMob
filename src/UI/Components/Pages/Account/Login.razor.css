@@ -1,0 +1,50 @@
+﻿/*.background {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    width: 1200px;
+    height: 100%;
+    background-color: rgba(12, 12, 12, 0.603);
+}*/
+h3 {
+    color: rgba(31, 55, 175, 0.87);
+}
+
+.spacing {
+    margin-bottom: 50px;
+}
+@media (min-width: 700px) and (orientation: landscape) {
+    .spacing {
+        max-width: 520px;
+        margin-top: 150px;
+        margin-bottom: 1px;
+    }
+
+    .btn-primary {
+        width: 500px !important;
+    }
+}
+
+@media (max-width: 876px) {
+    .spacing {
+        margin-top: 45%;
+    }
+
+    .btn-primary {
+        width: 125px !important;
+    }
+}
+
+
+.btn-primary {
+    background-color: rgba(31, 55, 175, 0.87) !important;
+    border-color: rgba(30, 46, 131, 0.87) !important;
+    border-radius: 10px;
+}
+
+    .btn-primary:hover {
+        background-color: rgba(45, 65, 165, 0.87) !important;
+        border-color: rgba(45, 65, 165, 0.87) !important;
+    }

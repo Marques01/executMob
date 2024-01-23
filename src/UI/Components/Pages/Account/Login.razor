@@ -1,0 +1,79 @@
+﻿@inject IAccountServices _accountServices
+@inject TokenAuthenticationProvider _authServices
+@inject NavigationManager _navigationManager
+@inject IDialogService DialogService
+
+@page "/login"
+@using Infrastructure
+@using Domain.Interfaces
+
+@if (_isLoading)
+{
+    <div class="spacing mx-auto">
+        <div style="margin-top:90%">
+            <div class="text-center text-primary">
+                <div class="spinner-border mb-3" role="status" style="width: 4rem; height: 4rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-black">
+                    Aguarde um momento estamos validando as suas informações
+                </p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <html>
+    <head>
+        <style>
+          /*   body {
+                background-image: -webkit-gradient(linear, left top, right top, from(#4e63d7), to(#76bfe9)) !important;
+                background-image: linear-gradient(to right, #4e63d7 0%, #76bfe9 100%) !important;
+            } */
+        </style>
+    </head>
+    <body>
+        <div class="spacing mx-auto">
+            <div class="p-3 m-0 border-0 mx-auto">
+                <FluentCard Width="auto">
+                    <div class="mt-3 mb-3">
+                        <h4 class="form-label">Usuário</h4>
+                        <FluentTextField @bind-Value="_userViewModel.Login" Placeholder="Login" style="width: 100%;">
+                            <FluentIcon Value="@(new Icons.Regular.Size20.Person())" Slot="start" Color="Color.Neutral" />
+                        </FluentTextField>
+                        @if (_showValidationLogin)
+                        {
+                            <p class="text-danger">
+                                Por favor, preencha o campo login
+                            </p>
+                        }
+                    </div>
+                    <div class="mb-5">
+                        <h4 class="form-label">Senha</h4>
+                        <FluentTextField @bind-Value="_userViewModel.Password" Placeholder="Senha" TextFieldType="TextFieldType.Password" style="width: 100%;">
+                            <FluentIcon Value="@(new Icons.Regular.Size20.Key())" Slot="start" Color="Color.Neutral" />
+                        </FluentTextField>
+                        @if (_showValidationPassword)
+                        {
+                            <p class="text-danger">
+                                Por favor, preencha o campo senha
+                            </p>
+                        }
+                    </div>
+                    @*  <div class="mb-5">
+                <FluentStack>
+                <FluentCheckbox @bind-Value="_stayConnected" @onchange="OnCheckBoxChanged" Label="Manter-me conectado"></FluentCheckbox>
+                </FluentStack>
+                </div> *@
+                    <FluentButton Type="ButtonType.Submit" @onclick="HandleSubmit" Disabled="_isLoading" IconStart="@(new Icons.Regular.Size16.ArrowCircleRight())" style="width:100%" Appearance="Appearance.Accent">
+                        Entrar
+                    </FluentButton>
+                </FluentCard>
+            </div>
+        </div>
+    </body>
+    </html>
+
+
+}
