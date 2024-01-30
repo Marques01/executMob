@@ -55,16 +55,16 @@ namespace Infrastructure.Services
         {
             try
             {
-                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorization();
+                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
 
                 var users = await _httpClient.GetFromJsonAsync<IEnumerable<User>>("api/user");
 
                 return users ?? Enumerable.Empty<User>();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(
+                    "Ocorreu um erro ao obter a lista de usuários. Caso o problema persistir entre em contato com o administrado do sistema");
             }
         }
     }

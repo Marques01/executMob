@@ -38,7 +38,7 @@ namespace Infrastructure.Services
 
         public async IAsyncEnumerable<Breakdown> GetBreakdownsAsync()
         {
-            _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorization();
+            _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
 
             var vehicles = _httpClient.GetFromJsonAsAsyncEnumerable<Breakdown>("api/breakdown");
 

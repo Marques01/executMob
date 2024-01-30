@@ -17,7 +17,7 @@ namespace Infrastructure.Extensions
             _js = js;
         }
 
-        public async Task<AuthenticationHeaderValue> SetTokenHeaderAuthorization()
+        public async Task<AuthenticationHeaderValue> SetTokenHeaderAuthorizationAsync()
         {
             var token = await _js.GetFromLocalStorage(TokenAuthenticationProvider.TokenKey);
 

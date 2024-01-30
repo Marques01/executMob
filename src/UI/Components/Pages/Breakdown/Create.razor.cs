@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Fast.Components.FluentUI;
+using System.Net.Http.Headers;
 using UI.Components.Layout;
 using UI.ViewModels;
 
@@ -24,14 +25,16 @@ namespace UI.Components.Pages.Breakdown
 
         private List<User> _usersList = new();
 
-        private List<string> _base64List = new();
-
-        private BrowserFiles _browserFiles = new();
+        private List<PictureViewModel> _pictureViewModelList = new();
 
         private MultipartFormDataContent _content = new();
 
+        private EditContext? _editContext;
+
         protected override async Task OnInitializedAsync()
         {
+            _editContext = new(_breakdownViewModel);
+
             _isLoading = true;
 
             await GetVehiclesAsync();
@@ -45,12 +48,40 @@ namespace UI.Components.Pages.Breakdown
         {
             try
             {
+                if (_pictureViewModelList.Count < 5)
+                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
 
+                if (_editContext is not null && _editContext.Validate())
+                {
+                    foreach (var picture in _pictureViewModelList)
+                    {
+                        ByteArrayContent byteContent = new ByteArrayContent(picture.Bytes);
+
+                        Stream stream = await byteContent.ReadAsStreamAsync();
+
+                        var streamContent = new StreamContent(stream);
+
+                        streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
+                        _content.Add(streamContent, "\"files\"", picture.FileName);
+                        
+                        var responseModel = await _pictureStorageServices.UploadAsync(_content);
+
+                        _content = new();
+                    }
+                }
             }
-            catch (Exception e)
+            catch (ArgumentException arg)
             {
-                Console.WriteLine(e);
-                throw;
+                await _dialogServices.ShowErrorAsync(arg.Message, "Atenção");
+                return;
+            }
+            catch (Exception)
+            {
+                await _dialogServices.ShowErrorAsync(
+                    "Ocorreu um erro inesperado. Caso persistir, favor entrar em contato com o administrador do sistema",
+                    "Atenção");
+                return;
             }
         }
 
@@ -77,10 +108,9 @@ namespace UI.Components.Pages.Breakdown
 
                 _users = users.ToList();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -138,31 +168,30 @@ namespace UI.Components.Pages.Breakdown
 
                 if (photo != null)
                 {
-                    // save the file into local storage
-                    string localFilePath = Path.Combine(FileSystem.CacheDirectory, photo.FileName);
-
                     using Stream sourceStream = await photo.OpenReadAsync();
-                    using FileStream localFileStream = File.OpenWrite(localFilePath);
 
-                    //await sourceStream.CopyToAsync(localFileStream);
-
-                    // Read the file into a byte array
                     byte[] fileBytes;
+
                     using (var memoryStream = new MemoryStream())
                     {
                         await sourceStream.CopyToAsync(memoryStream);
+
                         fileBytes = memoryStream.ToArray();
                     }
-
-                    // Convert the byte array to a base64 string
                     string base64Image = Convert.ToBase64String(fileBytes);
 
-                    _base64List.Add(base64Image);
+                    _pictureViewModelList.Add(new()
+                    {
+                        Content = base64Image,
+                        FileName = photo.FileName,
+                        Size = fileBytes.Length,
+                        Bytes = fileBytes
+                    });
                 }
             }
         }
 
-        private async Task RemovePhoto(string base64)
+        private async Task RemovePhoto(Guid id)
         {
             var dialog = await _dialogServices.ShowDialogAsync<SimpleCustomizedDialog>(new DialogParameters()
             {
@@ -176,60 +205,11 @@ namespace UI.Components.Pages.Breakdown
             var result = await dialog.Result;
 
             if (!result.Cancelled)
-                _base64List.Remove(base64);
-        }
-
-        protected async Task OnInputFileChange(InputFileChangeEventArgs e)
-        {
-            try
             {
-                _content = new MultipartFormDataContent();
-
-                _browserFiles.AddFiles(e.GetMultipleFiles());
-
-                string base64File = string.Empty;
-
-                string _fileName = string.Empty;
-
-                foreach (var file in _browserFiles.Multiparts)
-                {
-                    _content.Add(file);
-
-                    var contentDisposition = file.Headers.GetValues("Content-Disposition").FirstOrDefault();
-
-                    if (!string.IsNullOrEmpty(contentDisposition))
-                        _fileName = contentDisposition.Split(';')[2].Replace("filename=", string.Empty).Trim();
-
-                    var bytes = await file.ReadAsByteArrayAsync();
-
-                    base64File = Convert.ToBase64String(bytes);
-
-                    _base64List.Add(base64File);
-                }
-            }
-            catch (ArgumentException arg)
-            {
-                await _dialogServices.ShowErrorAsync(arg.Message, "Atenção");
-                return;
-            }
-            catch (IOException io)
-            {
-                await _dialogServices.ShowErrorAsync(io.Message, "Atenção");
-                return;
-            }
-            catch (Exception)
-            {
-                await _dialogServices.ShowErrorAsync(
-                    "Ocorreu um erro inesperado. Caso persistir, favor entrar em contato com o administrador do sistema",
-                    "Atenção");
-                throw;
-            }
-            finally
-            {
-                _browserFiles = new BrowserFiles();
+                PictureViewModel pictureViewModel = _pictureViewModelList.First(x => x.Id == id);
+                _pictureViewModelList.Remove(pictureViewModel);
             }
         }
-
         private async Task ShowErrorAsync(string message, string? title = null) => await _dialogServices.ShowErrorAsync(message, title);
     }
 }

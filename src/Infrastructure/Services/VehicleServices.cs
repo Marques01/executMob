@@ -39,7 +39,7 @@ namespace Infrastructure.Services
         {
             try
             {
-                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorization();
+                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
 
                 var vehicles = await _httpClient.GetFromJsonAsync<IEnumerable<Vehicle>>("api/vehicle");
 
