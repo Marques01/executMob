@@ -25,6 +25,9 @@ h3 {
     .btn-primary {
         width: 500px !important;
     }
+    .btn-secondary {
+        width: 500px !important;
+    }
 }
 
 @media (max-width: 876px) {
@@ -35,10 +38,13 @@ h3 {
     .btn-primary {
         width: 125px !important;
     }
+    .btn-secondary {
+        width: 125px !important;
+    }
 }
 
 
-.btn-primary {
+/*.btn-primary {
     background-color: rgba(31, 55, 175, 0.87) !important;
     border-color: rgba(30, 46, 131, 0.87) !important;
     border-radius: 10px;
@@ -48,3 +54,4 @@ h3 {
         background-color: rgba(45, 65, 165, 0.87) !important;
         border-color: rgba(45, 65, 165, 0.87) !important;
     }
+*/

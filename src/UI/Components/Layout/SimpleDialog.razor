@@ -1,0 +1,17 @@
+﻿@using UI.DialogModels
+@implements IDialogContentComponent<UI.DialogModels.SimpleDialogModel>
+
+<p>@Content.Message </p>
+
+@code {
+    [Parameter]
+    public SimpleDialogModel Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    public async Task ConfirmedAction(bool result)
+    {
+        await Dialog!.CloseAsync(result);
+    }
+}

@@ -20,14 +20,32 @@ namespace UI.Configuration
 
             services.AddHttpClient<TokenAuthenticationProvider>(x =>
             {
-                x.BaseAddress = new Uri("https://localhost:7256/");
-                x.DefaultRequestHeaders.Add("Accept", "application/+json");
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
             });
 
             services.AddHttpClient<IAccountServices, AccountServices>(x =>
             {
-                x.BaseAddress = new Uri("https://localhost:7256/");
-                x.DefaultRequestHeaders.Add("Accept", "application/+json");
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+
+            services.AddHttpClient<IBreakdownServices, BreakdownServices>(x =>
+            {
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+
+            services.AddHttpClient<IVehicleServices, VehicleServices>(x =>
+            {
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+
+            services.AddHttpClient<IUserServices, UserServices>(x =>
+            {
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
             });
         }
     }

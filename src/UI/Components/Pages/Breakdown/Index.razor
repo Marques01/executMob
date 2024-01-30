@@ -1,4 +1,10 @@
 ﻿@page "/breakdowns"
+@using Domain.Interfaces
+@inject IBreakdownServices _breakdownServices
+
 <h3>avarias</h3>
 
-
+@foreach (var breakdown in _breakdownsList)
+{
+    <p>@breakdown.Description</p>
+}

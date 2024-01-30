@@ -1,6 +1,11 @@
-﻿@page "/breakdown/create"
+﻿@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Fast.Components.FluentUI
+@page "/breakdown/create"
+@using Domain.Interfaces
 @inject NavigationManager _navigationManager
 @inject IDialogService _dialogServices
+@inject IVehicleServices _vehicleServices
+@inject IUserServices _userServices
 
 @if (_isLoading)
 {
@@ -8,7 +13,7 @@
         <div style="margin-top:90%">
             <div class="text-center text-primary">
                 <div class="spinner-border mb-3" role="status" style="width: 4rem; height: 4rem;">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden">Loadinghttps://blog.simplusbr.com/wp-content/uploads/2022/03/Desenho-carro_Prancheta-1-1024x853.jpg</span>
                 </div>
             </div>
         </div>
@@ -22,49 +27,83 @@ else
         </style>
     </head>
     <body>
-        <div class="spacing mx-auto">
-            <div class="p-3 m-0 border-0 mx-auto">
-                <FluentCard Width="auto">
-                    <div class="mt-3 mb-3">
-                        <h4 class="form-label">Veículo</h4>
-                        <FluentSelect TOption="int" Label="Veículos">
-                            @foreach (var vehicle in _vehicles)
-                            {
-                                <FluentOption Value="@(vehicle.VehicleId.ToString())">@vehicle.Model - @vehicle.Plate</FluentOption>
-                            }
-                        </FluentSelect>
-
-                        <FluentTextField Placeholder="Login" style="width: 100%;">
-                            <FluentIcon Value="@(new Icons.Regular.Size20.Person())" Slot="start" Color="Color.Neutral" />
-                        </FluentTextField>
-                        @if (_showValidationLogin)
+        <div class="p-3 m-0 border-0">
+            <div class="mb-3">
+                <label class="form-label">Veículo</label>
+                <div class="input-group">
+                    <i class="bi bi-car-front input-group-text"></i>
+                    <select class="form-select" @onchange="OnVehicleChanged">
+                        <option value="0">Selecione um veículo</option>
+                        @foreach (var vehicle in _vehicles)
                         {
-                            <p class="text-danger">
-                                Por favor, preencha o campo login
-                            </p>
+                            <option value="@vehicle.VehicleId">@vehicle.Model @vehicle.Plate</option>
                         }
-                    </div>
-                    <div class="mb-5">
-                        <h4 class="form-label">Senha</h4>
-                        <FluentTextField Placeholder="Senha" TextFieldType="TextFieldType.Password" style="width: 100%;">
-                            <FluentIcon Value="@(new Icons.Regular.Size20.Key())" Slot="start" Color="Color.Neutral" />
-                        </FluentTextField>
-                        @if (_showValidationPassword)
+                    </select>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Colaboradores</label>
+                <div class="input-group mb-2">
+                    <i class="bi bi-person-fill input-group-text"></i>
+                    <select class="form-select" @onchange="ChkEmployeeChanged" multiple="multiple">
+                        @foreach (var user in _users)
                         {
-                            <p class="text-danger">
-                                Por favor, preencha o campo senha
-                            </p>
+                            <option value="@user.UserId">@user.Name</option>
                         }
+                    </select>
+                </div>
+                <label class="form-label"><strong>Colaboradores selecionados:</strong></label>
+                @foreach (var user in _usersList)
+                {
+                    <p>@user.Name</p>
+                }
+                <hr class="dividir" />
+            </div>
+            <div class="mb-3">
+                <div class="input-group">
+                    <span class="input-group-text">KM</span>
+                    <input type="text" class="form-control @_inputOdometerClass" @bind="_breakdownViewModel.OdometerStart" @bind:event="oninput" @onchange="ValidationOdotometerMessage" placeholder="Quilometragem inicial" aria-label="Quilometragem inicial" aria-describedby="basic-addon1">
+                    @if (_showValidationOdometer)
+                    {
+                        <div class="invalid-feedback">
+                            Por favor, preencha o campo corretamente.
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="mb-5">
+                <label class="form-label">Descrição</label>
+                <div class="input-group">
+                    <i class="bi bi-file-text-fill input-group-text"></i>
+                    <textarea class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="mb-3">
+                <FluentButton OnClick="TakePhoto" IconStart="@(new Icons.Regular.Size20.Camera())" style="width:100%" Appearance="Appearance.Accent">
+                    Capturar imagem
+                </FluentButton>
+            </div>
+            <div class="row mx-auto mb-4">
+                @foreach (var base64 in _base64List)
+                {
+                    <div class="col-4">
+                        <div class="position-relative">
+                            <img src="data:image/png;base64,@base64" class="bd-placeholder-img img-thumbnail" width="80" height="80" title="Image" />
+                            <button class="position-absolute top-0 btn btn-danger btn-sm" @onclick="(() => RemovePhoto(base64))">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                    <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
+                }
+            </div>
 
-                    <FluentButton Type="ButtonType.Submit" @onclick="HandleSubmit" Disabled="_isLoading" IconStart="@(new Icons.Regular.Size16.ArrowCircleRight())" style="width:100%" Appearance="Appearance.Accent">
-                        Entrar
-                    </FluentButton>
-                </FluentCard>
+            <div class="justify-content-center ms-5 mx-auto">
+                <FluentButton Style="width: 120px">Voltar</FluentButton>
+                <FluentButton Style="width: 120px" Appearance="Appearance.Accent">Avançar</FluentButton>
             </div>
         </div>
     </body>
     </html>
-
-
 }

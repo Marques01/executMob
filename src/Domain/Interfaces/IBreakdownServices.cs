@@ -2,7 +2,7 @@
 
 namespace Domain.Interfaces
 {
-    public interface IBreakdownRepository
+    public interface IBreakdownServices
     {
         Task CreateAsync(Breakdown breakdown);
 

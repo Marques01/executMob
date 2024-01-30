@@ -2,7 +2,7 @@
 
 namespace Domain.Interfaces
 {
-    public interface IUserRepository
+    public interface IUserServices
     {
         Task CreateAsync(User user);
 
@@ -15,5 +15,7 @@ namespace Domain.Interfaces
         Task<User> SignInAsync(string login, string password);
 
         Task<User> GetUserByLoginAsync(string mail);
+
+        Task<IEnumerable<User>> GetUsersAsync();
     }
 }

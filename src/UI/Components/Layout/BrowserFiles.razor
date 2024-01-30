@@ -1,0 +1,97 @@
+﻿@using System.Net.Http.Headers;
+
+<label class="form-label">Adicionar imagem</label>
+<div class="input-group">
+    <i class="bi bi-camera input-group-text"></i>
+    <InputFile class="form-control" accept="image/png, image/jpeg, image/jpg" OnChange="OnFileChanged" />
+</div>
+
+@code {
+    [Parameter]
+    public int Progress { get; set; }
+
+    [Parameter]
+    public int MaxAllowedFiles { get; set; } = 1;
+
+    [Parameter]
+    public EventCallback<InputFileChangeEventArgs> OnFileChanged { get; set; }
+
+    private long MaxFileSize = 1024L * 1024L * 5/* MB */;
+
+    private MultipartFormDataContent contents = new();
+
+    public IReadOnlyList<HttpContent> Multiparts { get; private set; } = new List<HttpContent>();
+
+    public void AddFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        if (files.Count <= 0)
+            throw new ArgumentException("Escolha um arquivo para ser adicionado");
+
+        foreach (var file in files)
+        {
+            MaxAllowedIsValid(files.Count);
+
+            MaxFileSizeIsValid(file.Size);
+
+            string fileNameRandom = GenerateRandomFileName(file.Name);
+
+            FileExtensionIsValid(file.Name);
+
+            Stream stream = file.OpenReadStream(MaxFileSize);
+
+            var streamContent = new StreamContent(stream);
+
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+            contents.Add(streamContent, "\"files\"", fileNameRandom);
+
+            Multiparts = contents.ToList();
+        }
+    }
+
+    public void ClearFiles()
+    {
+        contents = new();
+
+        Multiparts = contents.ToList();
+    }
+
+    private bool MaxFileSizeIsValid(long size)
+    {
+        if (!(size > MaxFileSize))
+            return true;
+
+        Int64 maxFileSizeInMB = MaxFileSize / 1048576;
+
+        throw new IOException($"O tamanho excede o limite de {maxFileSizeInMB} Mb");
+    }
+
+    private bool MaxAllowedIsValid(int files)
+    {
+        if (!(files > MaxAllowedFiles))
+            return true;
+
+        throw new ArgumentException($"A quantidade máxima de seleção de arquivos é de {MaxAllowedFiles} por vez");
+    }
+
+    private bool FileExtensionIsValid(string fileName)
+    {
+        string fileExtension = Path.GetExtension(fileName).ToLower().Trim();
+
+        return fileExtension switch
+        {
+            ".png" => true,
+            ".jpg" => true,
+            ".jpeg" => true,
+            _ => throw new ArgumentException("O formato do arquivo deve ter um formato válido")
+        };
+    }
+
+    private string GenerateRandomFileName(string originalFileName)
+    {
+        string extension = Path.GetExtension(originalFileName);
+        string randomName = Guid.NewGuid().ToString("N");
+        string fileNameRandom = randomName + extension;
+        return fileNameRandom;
+    }
+}

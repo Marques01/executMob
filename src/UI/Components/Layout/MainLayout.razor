@@ -7,22 +7,22 @@
 
 <AuthorizeView>
     <Authorized>
-        <body class="p-4 m-0 border-0 bd-example">
+        <div class="p-4 m-0 border-0 bd-example">
             <div class="mb-5">
-                <NavMenu />
+                <NavMenu></NavMenu>
             </div>
-            <div class="">
+            <div class="content">
                 @Body
-                <FluentDialogProvider />
-                <FluentTooltipProvider />
+                <FluentDialogProvider/>
+                <FluentTooltipProvider/>
             </div>
-        </body>
+        </div>
     </Authorized>
 
     <NotAuthorized>
-        <FluentDialogProvider />
-        <FluentTooltipProvider />
-        <Login />
+        <FluentDialogProvider/>
+        <FluentTooltipProvider/>
+        <Login/>
     </NotAuthorized>
 </AuthorizeView>
 
@@ -44,7 +44,7 @@
 
         if (firstRender)
         {
-            
+
         }
     }
 }

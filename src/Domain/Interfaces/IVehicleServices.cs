@@ -2,7 +2,7 @@
 
 namespace Domain.Interfaces
 {
-    public interface IVehicleRepository
+    public interface IVehicleServices
     {
         Task CreateAsync(Vehicle vehicle);
 
@@ -10,7 +10,7 @@ namespace Domain.Interfaces
 
         Task DeleteAsync(int id);
 
-        IAsyncEnumerable<Vehicle> GetVehiclesAsync();
+        Task<IEnumerable<Vehicle>> GetVehiclesAsync();
 
         Task<bool> VehicleExistsAsync(string plate);
 
