@@ -48,27 +48,28 @@ namespace UI.Components.Pages.Breakdown
         {
             try
             {
-                if (_pictureViewModelList.Count < 5)
-                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
+                //if (_pictureViewModelList.Count < 5)
+                //    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
 
-                if (_editContext is not null && _editContext.Validate())
+                //if (_editContext is not null && _editContext.Validate())
+                //{
+                //}
+
+                foreach (var picture in _pictureViewModelList)
                 {
-                    foreach (var picture in _pictureViewModelList)
-                    {
-                        ByteArrayContent byteContent = new ByteArrayContent(picture.Bytes);
+                    ByteArrayContent byteContent = new ByteArrayContent(picture.Bytes);
 
-                        Stream stream = await byteContent.ReadAsStreamAsync();
+                    Stream stream = await byteContent.ReadAsStreamAsync();
 
-                        var streamContent = new StreamContent(stream);
+                    var streamContent = new StreamContent(stream);
 
-                        streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+                    streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
 
-                        _content.Add(streamContent, "\"files\"", picture.FileName);
-                        
-                        var responseModel = await _pictureStorageServices.UploadAsync(_content);
+                    _content.Add(streamContent, "\"files\"", picture.FileName);
 
-                        _content = new();
-                    }
+                    var responseModel = await _pictureStorageServices.UploadAsync(_content);
+
+                    _content = new();
                 }
             }
             catch (ArgumentException arg)
