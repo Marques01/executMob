@@ -39,6 +39,7 @@
         if (!tokenIsValid && !_navigationManager.Uri.Contains("login"))
         {
             await _dialogServices.ShowInfoAsync("Desculpe, sua sessão expirou. Por favor, faça login para continuar.", "Atenção");
+            await _js.RemoveItem(TokenAuthenticationProvider.TokenKey);
             _navigationManager.NavigateTo("/login", true);
         }
 

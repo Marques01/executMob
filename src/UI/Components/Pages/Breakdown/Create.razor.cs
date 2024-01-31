@@ -12,10 +12,16 @@ namespace UI.Components.Pages.Breakdown
     {
         private bool
             _isLoading = false,
-            _showValidationOdometer = false;
+            _showValidationOdometer = false,
+            _showValidationEmployee = false,
+            _showValidationDescription = false,
+            _showValidationVehicle = false;
 
         private string
-            _inputOdometerClass = string.Empty;
+            _inputOdometerClass = string.Empty,
+            _inputDescriptionClass = string.Empty,
+            _inputVehicleClass = string.Empty,
+            _inputEmployeeClass = string.Empty;
 
         private BreakdownViewModel _breakdownViewModel = new();
 
@@ -48,40 +54,40 @@ namespace UI.Components.Pages.Breakdown
         {
             try
             {
-                //if (_pictureViewModelList.Count < 5)
-                //    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
+                ValidatioAllFields();
 
-                //if (_editContext is not null && _editContext.Validate())
-                //{
-                //}
+                if (_pictureViewModelList.Count < 5)
+                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
 
-                foreach (var picture in _pictureViewModelList)
+                if (_editContext is not null && _editContext.Validate() && _pictureViewModelList.Count == 5)
                 {
-                    ByteArrayContent byteContent = new ByteArrayContent(picture.Bytes);
+                    foreach (var picture in _pictureViewModelList)
+                    {
+                        ByteArrayContent byteContent = new ByteArrayContent(picture.Bytes);
 
-                    Stream stream = await byteContent.ReadAsStreamAsync();
+                        Stream stream = await byteContent.ReadAsStreamAsync();
 
-                    var streamContent = new StreamContent(stream);
+                        var streamContent = new StreamContent(stream);
 
-                    streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+                        streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
 
-                    _content.Add(streamContent, "\"files\"", picture.FileName);
+                        _content.Add(streamContent, "\"files\"", picture.FileName);
 
-                    var responseModel = await _pictureStorageServices.UploadAsync(_content);
+                        var responseModel = await _pictureStorageServices.UploadAsync(_content);
 
-                    _content = new();
+                        _content = new();
+                    }
                 }
+                
             }
             catch (ArgumentException arg)
             {
                 await _dialogServices.ShowErrorAsync(arg.Message, "Atenção");
                 return;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                await _dialogServices.ShowErrorAsync(
-                    "Ocorreu um erro inesperado. Caso persistir, favor entrar em contato com o administrador do sistema",
-                    "Atenção");
+                await _dialogServices.ShowErrorAsync(ex.Message,"Atenção");
                 return;
             }
         }
@@ -138,12 +144,31 @@ namespace UI.Components.Pages.Breakdown
                     _usersList.Remove(user);
                 }
             }
+
+            ValidationEmployeeMessage();
         }
 
         private void OnVehicleChanged(ChangeEventArgs e)
         {
+            ValidationVehicleMessage();
         }
 
+        private void ValidationDescriptionMessage()
+        {
+            _inputDescriptionClass = _breakdownViewModel.Description.Length > 0 ? "is-valid" : "is-invalid";
+            _showValidationDescription = _breakdownViewModel.Description.Length <= 0;
+        }
+
+        private void ValidationEmployeeMessage()
+        {
+            _inputEmployeeClass = _usersList.Count == 2 ? "is-valid" : "is-invalid";
+            _showValidationEmployee = _usersList.Count < 2;
+        }
+        private void ValidationVehicleMessage()
+        {
+            _inputVehicleClass = _breakdownViewModel.VehicleId > 0 ? "is-valid" : "is-invalid";
+            _showValidationVehicle = _breakdownViewModel.VehicleId <= 0;
+        }
         private void ValidationOdotometerMessage()
         {
             if (_breakdownViewModel.OdometerStart == 0)
@@ -160,6 +185,13 @@ namespace UI.Components.Pages.Breakdown
             }
         }
 
+        private void ValidatioAllFields()
+        {
+            ValidationDescriptionMessage();
+            ValidationEmployeeMessage();
+            ValidationOdotometerMessage();
+            ValidationVehicleMessage();
+        }
 
         public async Task TakePhoto()
         {
