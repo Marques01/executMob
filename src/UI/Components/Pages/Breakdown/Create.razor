@@ -5,6 +5,7 @@
 @inject IVehicleServices _vehicleServices
 @inject IUserServices _userServices
 @inject IPictureStorageServices _pictureStorageServices
+@inject IBreakdownServices _breakdownServices
 
 @if (_isLoading)
 {
@@ -12,7 +13,7 @@
         <div style="margin-top:90%">
             <div class="text-center text-primary">
                 <div class="spinner-border mb-3" role="status" style="width: 4rem; height: 4rem;">
-                    <span class="visually-hidden">Loadinghttps://blog.simplusbr.com/wp-content/uploads/2022/03/Desenho-carro_Prancheta-1-1024x853.jpg</span>
+                    <span class="visually-hidden">Loading</span>
                 </div>
             </div>
         </div>
@@ -120,7 +121,7 @@ else
                 </div>
 
                 <div class="justify-content-center ms-5 mx-auto">
-                    <FluentButton Style="width: 120px">Voltar</FluentButton>
+                    <FluentButton OnClick="RedirectToIndex" Style="width: 120px">Voltar</FluentButton>
                     <FluentButton OnClick="HandleSubmit" Type="ButtonType.Submit" Style="width: 120px" Appearance="Appearance.Accent">Avançar</FluentButton>
                 </div>
             </div>

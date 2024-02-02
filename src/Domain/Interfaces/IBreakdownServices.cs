@@ -1,19 +1,17 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Response;
+using Domain.Models;
 
 namespace Domain.Interfaces
 {
     public interface IBreakdownServices
     {
-        Task CreateAsync(Breakdown breakdown);
-
-        Task UpdateAsync(Breakdown breakdown);
-
-        Task<Breakdown> GetAsync(int id);
+        Task<BreakdownResponseModel> CreateAsync(BreakdownCostumerModel breakdown);
 
         IAsyncEnumerable<Breakdown> GetBreakdownsAsync();
 
         Task<IEnumerable<Breakdown>> GetBreakdownsAsync(int page, int pageSize);
 
-        Task<bool> ExistsAsync(int vehicleId, DateTime date);
+        Task<BreakdownImagesResponseModel> SaveDirectoryImage(BreakdownImages breakdownImages);
     }
 }

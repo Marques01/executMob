@@ -1,4 +1,6 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Response;
+using Domain.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Fast.Components.FluentUI;
@@ -33,8 +35,6 @@ namespace UI.Components.Pages.Breakdown
 
         private List<PictureViewModel> _pictureViewModelList = new();
 
-        private MultipartFormDataContent _content = new();
-
         private EditContext? _editContext;
 
         protected override async Task OnInitializedAsync()
@@ -48,48 +48,6 @@ namespace UI.Components.Pages.Breakdown
             await GetUsersAsync();
 
             _isLoading = false;
-        }
-
-        private async Task HandleSubmit()
-        {
-            try
-            {
-                ValidatioAllFields();
-
-                if (_pictureViewModelList.Count < 5)
-                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
-
-                if (_editContext is not null && _editContext.Validate() && _pictureViewModelList.Count == 5)
-                {
-                    foreach (var picture in _pictureViewModelList)
-                    {
-                        ByteArrayContent byteContent = new ByteArrayContent(picture.Bytes);
-
-                        Stream stream = await byteContent.ReadAsStreamAsync();
-
-                        var streamContent = new StreamContent(stream);
-
-                        streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-
-                        _content.Add(streamContent, "\"files\"", picture.FileName);
-
-                        var responseModel = await _pictureStorageServices.UploadAsync(_content);
-
-                        _content = new();
-                    }
-                }
-                
-            }
-            catch (ArgumentException arg)
-            {
-                await _dialogServices.ShowErrorAsync(arg.Message, "Atenção");
-                return;
-            }
-            catch (Exception ex)
-            {
-                await _dialogServices.ShowErrorAsync(ex.Message,"Atenção");
-                return;
-            }
         }
 
         private async Task GetVehiclesAsync()
@@ -121,6 +79,48 @@ namespace UI.Components.Pages.Breakdown
             }
         }
 
+        private async Task<PictureSaveResponseModel> UploadPictureAsync(PictureViewModel picture)
+        {
+            using var content = new MultipartFormDataContent();
+            using var byteContent = new ByteArrayContent(picture.Bytes);
+            using var stream = await byteContent.ReadAsStreamAsync();
+            using var streamContent = new StreamContent(stream);
+
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+            content.Add(streamContent, "\"files\"", picture.FileName);
+
+            var pictureSaveResponseModel = await _pictureStorageServices.UploadAsync(content);
+
+            return pictureSaveResponseModel;
+        }
+
+        private async Task<Domain.Entities.Breakdown> CreateBreakDownAsync()
+        {
+            BreakdownCostumerModel breakdownCostumerModel = new()
+            {
+                Description = _breakdownViewModel.Description,
+                OdometerStart = _breakdownViewModel.OdometerStart,
+                VehicleId = _breakdownViewModel.VehicleId,
+            };
+
+            var breakDownResponseModel = await _breakdownServices.CreateAsync(breakdownCostumerModel);
+
+            return breakDownResponseModel.Model!;
+        }
+
+        private async Task<BreakdownImagesResponseModel> SaveBreakdownImage(int breakdownId, string fileName)
+        {
+            BreakdownImages breakdownImages = new()
+            {
+                BreakdownId = breakdownId,
+                Image = fileName
+            };
+
+            var pictureSaveResponseModel = await _breakdownServices.SaveDirectoryImage(breakdownImages);
+
+            return pictureSaveResponseModel;
+        }
+
         private void ChkEmployeeChanged(ChangeEventArgs e)
         {
             if (e.Value is string[] usersIds)
@@ -147,6 +147,99 @@ namespace UI.Components.Pages.Breakdown
 
             ValidationEmployeeMessage();
         }
+
+        private async Task HandleSubmit()
+        {
+            try
+            {
+                ValidatioAllFields();
+
+                if (_pictureViewModelList.Count < 5)
+                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
+
+                if (_editContext is not null && _editContext.Validate() && _pictureViewModelList.Count == 5)
+                {
+                    var breakdown = await CreateBreakDownAsync();
+
+                    foreach (var picture in _pictureViewModelList)
+                    {
+                        var pictureSaveResponseModel = await UploadPictureAsync(picture);
+
+                        await SaveBreakdownImage(breakdown.BreakdownId, pictureSaveResponseModel.Model!.Name);
+                    }
+
+                    var dialogReference = await _dialogServices.ShowSuccessAsync("Avaria cadastrada com sucesso!", "Sucesso");
+
+                    var result = await dialogReference.Result;
+
+                    if (!result.Cancelled)
+                        RedirectToIndex();
+                }
+
+            }
+            catch (ArgumentException arg)
+            {
+                await ShowErrorAsync(arg.Message, "Atenção");
+                return;
+            }
+            catch (Exception ex)
+            {
+                await ShowErrorAsync(ex.Message, "Atenção");
+                return;
+            }
+        }
+
+        public async Task TakePhoto()
+        {
+            if (MediaPicker.Default.IsCaptureSupported)
+            {
+                FileResult photo = await MediaPicker.Default.CapturePhotoAsync();
+
+                if (photo != null)
+                {
+                    using Stream sourceStream = await photo.OpenReadAsync();
+
+                    byte[] fileBytes;
+
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await sourceStream.CopyToAsync(memoryStream);
+
+                        fileBytes = memoryStream.ToArray();
+                    }
+                    string base64Image = Convert.ToBase64String(fileBytes);
+
+                    _pictureViewModelList.Add(new()
+                    {
+                        Content = base64Image,
+                        FileName = photo.FileName,
+                        Size = fileBytes.Length,
+                        Bytes = fileBytes
+                    });
+                }
+            }
+        }
+        private async Task RemovePhoto(Guid id)
+        {
+            var dialog = await _dialogServices.ShowDialogAsync<SimpleCustomizedDialog>(new DialogParameters()
+            {
+                Height = "auto",
+                Title = $"Confirmar ação",
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true,
+                Modal = true,
+            });
+
+            var result = await dialog.Result;
+
+            if (!result.Cancelled)
+            {
+                PictureViewModel pictureViewModel = _pictureViewModelList.First(x => x.Id == id);
+                _pictureViewModelList.Remove(pictureViewModel);
+            }
+        }
+
+        private void RedirectToIndex() => _navigationManager.NavigateTo("/", true);
 
         private void OnVehicleChanged(ChangeEventArgs e)
         {
@@ -193,56 +286,6 @@ namespace UI.Components.Pages.Breakdown
             ValidationVehicleMessage();
         }
 
-        public async Task TakePhoto()
-        {
-            if (MediaPicker.Default.IsCaptureSupported)
-            {
-                FileResult photo = await MediaPicker.Default.CapturePhotoAsync();
-
-                if (photo != null)
-                {
-                    using Stream sourceStream = await photo.OpenReadAsync();
-
-                    byte[] fileBytes;
-
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        await sourceStream.CopyToAsync(memoryStream);
-
-                        fileBytes = memoryStream.ToArray();
-                    }
-                    string base64Image = Convert.ToBase64String(fileBytes);
-
-                    _pictureViewModelList.Add(new()
-                    {
-                        Content = base64Image,
-                        FileName = photo.FileName,
-                        Size = fileBytes.Length,
-                        Bytes = fileBytes
-                    });
-                }
-            }
-        }
-
-        private async Task RemovePhoto(Guid id)
-        {
-            var dialog = await _dialogServices.ShowDialogAsync<SimpleCustomizedDialog>(new DialogParameters()
-            {
-                Height = "auto",
-                Title = $"Confirmar ação",
-                PreventDismissOnOverlayClick = true,
-                PreventScroll = true,
-                Modal = true,
-            });
-
-            var result = await dialog.Result;
-
-            if (!result.Cancelled)
-            {
-                PictureViewModel pictureViewModel = _pictureViewModelList.First(x => x.Id == id);
-                _pictureViewModelList.Remove(pictureViewModel);
-            }
-        }
         private async Task ShowErrorAsync(string message, string? title = null) => await _dialogServices.ShowErrorAsync(message, title);
     }
 }

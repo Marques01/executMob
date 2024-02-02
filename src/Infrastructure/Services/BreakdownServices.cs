@@ -1,8 +1,13 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Response;
 using Domain.Interfaces;
+using Domain.Models;
 using Infrastructure.Extensions;
 using Microsoft.JSInterop;
+using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 
 namespace Infrastructure.Services
 {
@@ -16,24 +21,49 @@ namespace Infrastructure.Services
 
         public BreakdownServices(HttpClient httpClient, IJSRuntime jsRuntime)
         {
-            _headersMethods = new HeadersMethods(httpClient, jsRuntime);            
+            _headersMethods = new HeadersMethods(httpClient, jsRuntime);
             _httpClient = httpClient;
-            _jsRuntime = jsRuntime;            
+            _jsRuntime = jsRuntime;
         }
 
-        public async Task CreateAsync(Breakdown breakdown)
+        public async Task<BreakdownResponseModel> CreateAsync(BreakdownCostumerModel breakdown)
         {
-            throw new NotImplementedException();
-        }
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
 
-        public async Task UpdateAsync(Breakdown breakdown)
-        {
-            throw new NotImplementedException();
-        }
+                string jsonData = JsonSerializer.Serialize(breakdown);
 
-        public async Task<Breakdown> GetAsync(int id)
-        {
-            throw new NotImplementedException();
+                var httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/breakdown", httpContent);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                var responseModel = JsonSerializer.Deserialize<BreakdownResponseModel>(content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (responseModel is not null)
+                {
+                    if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                        throw new Exception(responseModel.Message);
+
+                    if (responseModel.StatusCode == HttpStatusCode.BadRequest)
+                        throw new ArgumentException(responseModel.Message);
+
+                    return responseModel;
+                }
+
+                throw new Exception("Erro ao tentar criar a avaria.");
+            }
+            catch (ArgumentException arg)
+            {
+                throw new ArgumentException(arg.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async IAsyncEnumerable<Breakdown> GetBreakdownsAsync()
@@ -44,20 +74,49 @@ namespace Infrastructure.Services
 
             await foreach (var vehicle in vehicles)
             {
-                await Task.Delay(1200);
-
                 yield return vehicle ?? new();
             }
         }
 
-        public async Task<IEnumerable<Breakdown>> GetBreakdownsAsync(int page, int pageSize)
+        public Task<IEnumerable<Breakdown>> GetBreakdownsAsync(int page, int pageSize)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<bool> ExistsAsync(int vehicleId, DateTime date)
+        public async Task<BreakdownImagesResponseModel> SaveDirectoryImage(BreakdownImages breakdownImages)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
+
+                string jsonData = JsonSerializer.Serialize(breakdownImages);
+
+                var httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/breakdown/save/image", httpContent);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                var responseModel = JsonSerializer.Deserialize<BreakdownImagesResponseModel>(content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (responseModel is not null)
+                {
+                    if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                        throw new Exception(responseModel.Message);
+
+                    if (responseModel.StatusCode == HttpStatusCode.BadRequest)
+                        throw new ArgumentException(responseModel.Message);
+
+                    return responseModel;
+                }
+
+                throw new Exception("Erro ao associar a imagem da avaria.");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }
