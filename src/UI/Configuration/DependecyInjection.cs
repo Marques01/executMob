@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Dto;
+using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Components.Authorization;

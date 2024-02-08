@@ -10,8 +10,14 @@ namespace Domain.Interfaces
 
         IAsyncEnumerable<Breakdown> GetBreakdownsAsync();
 
+        Task<IEnumerable<Breakdown>> GetBreakdownsIEnumerableAsync();
+
         Task<IEnumerable<Breakdown>> GetBreakdownsAsync(int page, int pageSize);
 
         Task<BreakdownImagesResponseModel> SaveDirectoryImage(BreakdownImages breakdownImages);
+
+        Task<Breakdown> GetBreakdownAsync(int id);
+
+        Task<BreakdownUserResponseModel> AssociateUser(BreakdownUserCostumerModel costumerModel);
     }
 }

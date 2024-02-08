@@ -168,6 +168,17 @@ namespace UI.Components.Pages.Breakdown
                         await SaveBreakdownImage(breakdown.BreakdownId, pictureSaveResponseModel.Model!.Name);
                     }
 
+                    foreach (var user in _usersList)
+                    {
+                        BreakdownUserCostumerModel costumerModel = new()
+                        {
+                            BreakdownId = breakdown.BreakdownId,
+                            UserId = user.UserId
+                        };
+
+                        await _breakdownServices.AssociateUser(costumerModel);
+                    }
+
                     var dialogReference = await _dialogServices.ShowSuccessAsync("Avaria cadastrada com sucesso!", "Sucesso");
 
                     var result = await dialogReference.Result;

@@ -1,0 +1,107 @@
+﻿@page "/breakdownviewer/{id}"
+@using Domain.Interfaces
+@inject IBreakdownServices _breakdownServices
+@inject IDialogService _dialogService
+
+<link rel="stylesheet" href="UI.styles.css" />
+@if (_isLoading)
+{
+    <div class="spacing mx-auto">
+        <div style="margin-top:90%">
+            <div class="text-center text-primary">
+                <div class="spinner-border mb-3" role="status" style="width: 4rem; height: 4rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-black">
+                    Aguarde um momento estamos enquanto carregando as informações...
+                </p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <FluentTabs ActiveTabId="tab-1">
+        <FluentTab Id="tab-1">
+            <Header>
+                <FluentIcon Value="@(new Icons.Regular.Size16.VehicleCarCollision())" />
+                Veículo
+            </Header>
+            <Content>
+                <div class="mt-5">
+                    <FluentLabel>Informações do veículo</FluentLabel>
+                    <FluentCard>
+                        <FluentTextField @bind-Value="_breakdown.Vehicle!.Model" ReadOnly="true" style="width: 100%;" Label="Modelo"></FluentTextField>
+                        <FluentTextField @bind-Value="_breakdown.Vehicle!.Plate" ReadOnly="true" style="width: 100%;" Label="Placa"></FluentTextField>
+                        <FluentNumberField @bind-Value="_breakdown.OdometerStart" ReadOnly="true" style="width: 100%;" Label="Odômetro inicial"></FluentNumberField>
+                        <FluentNumberField @bind-Value="_breakdown.OdometerEnd" ReadOnly="true" style="width: 100%;" Label="Odômetro final"></FluentNumberField>
+                        <FluentTextArea @bind-Value="_breakdown.Description" ReadOnly="true" Label="Descrição" style="width: 100%;"></FluentTextArea>
+                    </FluentCard>
+                </div>
+
+            </Content>
+        </FluentTab>
+        <FluentTab Id="tab-2">
+            <Header>
+                <FluentIcon Value="@(new Icons.Regular.Size16.Person())" Color="@Color.Success" />
+                Colaboradores
+            </Header>
+            <Content>
+                <div class="mt-5">
+                    @if (_breakdown.BreakdownUsers is not null)
+                    {
+                        @foreach (var breakdownUser in _breakdown.BreakdownUsers)
+                        {
+                            <FluentPersona Name="@breakdownUser.User!.Name"
+                                           ImageSize="50px"
+                                           Status="PresenceStatus.Available"
+                                           StatusSize="PresenceBadgeSize.Small"
+                                           Style="margin-bottom:10px;">
+                            </FluentPersona>
+                        }
+                    }
+                </div>
+
+            </Content>
+        </FluentTab>
+        <FluentTab Id="tab-3">
+            <Header>
+                <FluentIcon Value="@(new Icons.Regular.Size16.Image())" Color="@Color.Info" />
+                <span style="color:forestgreen;">Imagens</span>
+            </Header>
+            <Content>
+                <div class="mt-5">
+                    @if (_breakdown.BreakdownImages is not null)
+                    {
+                        <div id="fullscreen" class="fullscreen">
+                            <img id="fullscreenImage">
+                            <button class="close-button" onclick="closeFullscreen()">X</button>
+                        </div>
+                        <div class="row mx-auto mb-4">
+                            @foreach (var picture in _breakdown.BreakdownImages)
+                            {
+                                <div class="col-4">
+                                    <div class="position-relative">
+                                        <img src="data:image/png;base64,@picture.Image" class="bd-placeholder-img img-thumbnail" width="80" height="80" title="Image" @onclick="(() => OpenImageViewer(picture.Image))" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </Content>
+        </FluentTab>
+    </FluentTabs>
+}
+
+
+<script>
+    function openFullscreen(element) {
+        document.getElementById('fullscreenImage').src = element.src;
+        document.getElementById('fullscreen').style.display = 'block';
+    }
+
+    function closeFullscreen() {
+        document.getElementById('fullscreen').style.display = 'none';
+    }
+</script>

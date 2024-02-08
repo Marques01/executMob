@@ -19,5 +19,7 @@
         public ICollection<BreakdownImages>? BreakdownImages { get; set; }
 
         public Vehicle? Vehicle { get; set; }
+
+        public ICollection<BreakdownUser>? BreakdownUsers { get; set; }
     }
 }

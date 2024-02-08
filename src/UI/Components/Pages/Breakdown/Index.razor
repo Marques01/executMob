@@ -1,10 +1,37 @@
 ﻿@page "/breakdowns"
 @using Domain.Interfaces
 @inject IBreakdownServices _breakdownServices
-
-<h3>avarias</h3>
-
-@foreach (var breakdown in _breakdownsList)
+@inject NavigationManager _navigationManager
+@if (_isLoading)
 {
-    <p>@breakdown.Description</p>
+    <div class="spacing mx-auto">
+        <div style="margin-top:90%">
+            <div class="text-center text-primary">
+                <div class="spinner-border mb-3" role="status" style="width: 4rem; height: 4rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-black">
+                    Aguarde um momento estamos enquanto carregando as informações...
+                </p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <FluentLabel>Avarias cadastradas</FluentLabel>
+    <div class="mx-auto mt-5 mb-3">
+        <FluentDataGrid Pagination="_pagination" Items="_breakdownsList.AsQueryable()">
+            <PropertyColumn Title="Veículo" Property='x => x.Vehicle!.Model + " " +  x.Vehicle.Plate' Sortable="true" Align="Align.Start" Tooltip="true" style="width:100%" />
+            <PropertyColumn Title="Placa" Property='x => x.Vehicle!.Plate' Sortable="true" Align="Align.Start" Tooltip="true" style="width:100%" />
+            <PropertyColumn Title="Data" Property='x => x.CreateAt.ToString("dd/MM/yyyy")' Sortable="true" Align="Align.Start" Tooltip="true" />
+            <PropertyColumn Title="Odômetro" Property='x => x.OdometerStart' Sortable="true" Align="Align.Start" Tooltip="true" />
+            <TemplateColumn Title="Ações" Align="@Align.End" Context="breakdown">
+                <FluentButton OnClick="(() => BreakdownDetails(breakdown.BreakdownId))">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.DocumentOnePage())" Color="Color.Accent" Title="Visualizar"/>
+                </FluentButton>
+            </TemplateColumn>
+        </FluentDataGrid>
+        <FluentPaginator State="_pagination"></FluentPaginator>
+    </div>
 }
