@@ -20,6 +20,8 @@
 
         public Vehicle? Vehicle { get; set; }
 
+        public OrderService? OrderService { get; set; }
+
         public ICollection<BreakdownUser>? BreakdownUsers { get; set; }
     }
 }

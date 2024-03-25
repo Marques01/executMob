@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Fast.Components.FluentUI;
 using System.Net.Http.Headers;
+using Domain.Enum;
 using UI.Components.Layout;
 using UI.ViewModels;
 
@@ -58,10 +59,10 @@ namespace UI.Components.Pages.Breakdown
 
                 _vehicles = vehicles.ToList();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
-                throw;
+                await ShowErrorAsync(ex.Message, "Atenção");
+                return;
             }
         }
 
@@ -75,7 +76,8 @@ namespace UI.Components.Pages.Breakdown
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                await ShowErrorAsync(ex.Message, "Atenção");
+                return;
             }
         }
 
@@ -106,6 +108,20 @@ namespace UI.Components.Pages.Breakdown
             var breakDownResponseModel = await _breakdownServices.CreateAsync(breakdownCostumerModel);
 
             return breakDownResponseModel.Model!;
+        }
+
+        private async Task<OrderServiceResponseModel> CreateOrderServiceAsync(Domain.Entities.Breakdown breakdown)
+        {
+            OrderServiceCostumerModel orderServiceCostumerModel = new()
+            {
+                BreakdownId = breakdown.BreakdownId,
+                Description = _breakdownViewModel.Description,
+                Status = StatusEnum.Opened,
+            };
+
+            var orderServiceResponseModel = await _orderServiceProcessing.CreateAsync(orderServiceCostumerModel);
+
+            return orderServiceResponseModel;
         }
 
         private async Task<BreakdownImagesResponseModel> SaveBreakdownImage(int breakdownId, string fileName)
@@ -152,13 +168,17 @@ namespace UI.Components.Pages.Breakdown
         {
             try
             {
-                ValidatioAllFields();
+                ValidationAllFields();
 
                 if (_pictureViewModelList.Count < 5)
                     throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
 
                 if (_editContext is not null && _editContext.Validate() && _pictureViewModelList.Count == 5)
                 {
+                    _isLoading = true;
+
+                    await Task.Delay(500);
+
                     var breakdown = await CreateBreakDownAsync();
 
                     foreach (var picture in _pictureViewModelList)
@@ -179,9 +199,13 @@ namespace UI.Components.Pages.Breakdown
                         await _breakdownServices.AssociateUser(costumerModel);
                     }
 
+                    await CreateOrderServiceAsync(breakdown);
+
                     var dialogReference = await _dialogServices.ShowSuccessAsync("Avaria cadastrada com sucesso!", "Sucesso");
 
                     var result = await dialogReference.Result;
+
+                    _isLoading = false;
 
                     if (!result.Cancelled)
                         RedirectToIndex();
@@ -289,7 +313,7 @@ namespace UI.Components.Pages.Breakdown
             }
         }
 
-        private void ValidatioAllFields()
+        private void ValidationAllFields()
         {
             ValidationDescriptionMessage();
             ValidationEmployeeMessage();

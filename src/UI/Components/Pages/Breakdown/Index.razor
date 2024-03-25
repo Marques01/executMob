@@ -28,7 +28,7 @@ else
             <PropertyColumn Title="Odômetro" Property='x => x.OdometerStart' Sortable="true" Align="Align.Start" Tooltip="true" />
             <TemplateColumn Title="Ações" Align="@Align.End" Context="breakdown">
                 <FluentButton OnClick="(() => BreakdownDetails(breakdown.BreakdownId))">
-                    <FluentIcon Value="@(new Icons.Regular.Size20.DocumentOnePage())" Color="Color.Accent" Title="Visualizar"/>
+                    <FluentIcon Value="@(new Icons.Regular.Size20.DocumentOnePage())" Color="Color.Accent" Title="Visualizar" />
                 </FluentButton>
             </TemplateColumn>
         </FluentDataGrid>

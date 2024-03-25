@@ -1,5 +1,4 @@
-﻿using Domain.Dto;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -50,6 +49,12 @@ namespace UI.Configuration
             });
 
             services.AddHttpClient<IPictureStorageServices, PictureStorageServices>(x =>
+            {
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+
+            services.AddHttpClient<IOrderServiceProcessing, OrderServiceProcessing>(x =>
             {
                 x.BaseAddress = new Uri("http://189.105.213.202:5000/");
                 x.DefaultRequestHeaders.Add("Accept", "application/json");
