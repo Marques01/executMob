@@ -1,6 +1,9 @@
 ﻿using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
+using Domain.Entities;
 using Domain.Entities.Response;
 using Domain.Interfaces;
 using Domain.Models;
@@ -70,9 +73,43 @@ namespace Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public Task<OrderServiceProductResponseModel> AddProductAsync(OrderServiceProductCostumerModel orderServiceProduct)
+        public async Task<OrderServiceProductResponseModel> AddProductAsync(OrderServiceProductCostumerModel orderServiceProduct)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
+
+                HttpContent httpContent = new StringContent(JsonSerializer.Serialize(orderServiceProduct), Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/OrderService/AddProduct", httpContent);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                JsonSerializerOptions options = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+
+                var responseModel = JsonSerializer.Deserialize<OrderServiceProductResponseModel>(content, options);
+
+                if (responseModel is not null)
+                {
+                    if (responseModel.StatusCode == HttpStatusCode.BadRequest)
+                        throw new ArgumentException(responseModel.Message);
+
+                    if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                        throw new Exception(responseModel.Message);
+
+                    return responseModel;
+                }
+
+                throw new Exception("Ocorreu um erro em nossos servidores. Tente novamente mais tarde");
+            }
+            catch (ArgumentNullException arg)
+            {
+                throw new ArgumentException(arg.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public Task<OrderServiceProductResponseModel> RemoveProductAsync(int id)
@@ -85,9 +122,41 @@ namespace Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public Task<OrderServiceResponseModel> CloseOrderServiceAsync(int id)
+        public async Task<OrderServiceResponseModel> CloseOrderServiceAsync(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
+                
+                var response = await _httpClient.PutAsync($"api/OrderService/CloseOS/{id}", null);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                JsonSerializerOptions options = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+
+                var responseModel = JsonSerializer.Deserialize<OrderServiceResponseModel>(content, options);
+
+                if (responseModel is not null)
+                {
+                    if (responseModel.StatusCode == HttpStatusCode.BadRequest)
+                        throw new ArgumentException(responseModel.Message);
+
+                    if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                        throw new Exception(responseModel.Message);
+
+                    return responseModel;
+                }
+
+                throw new Exception("Ocorreu um erro em nossos servidores. Tente novamente mais tarde");
+            }
+            catch (ArgumentNullException arg)
+            {
+                throw new ArgumentException(arg.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

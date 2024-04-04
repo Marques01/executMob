@@ -19,5 +19,7 @@ namespace Domain.Interfaces
         Task<Breakdown> GetBreakdownAsync(int id);
 
         Task<BreakdownUserResponseModel> AssociateUser(BreakdownUserCostumerModel costumerModel);
+
+        Task<BreakdownResponseModel> UpdateAsync(BreakdownCostumerUpdateModel breakdown);
     }
 }

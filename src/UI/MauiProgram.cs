@@ -13,7 +13,7 @@ namespace UI
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
                 {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("Comfortaa-VariableFont_wght.ttf", "Comfortaa");
                 });
 
             builder.Services.AddFluentUIComponents(options =>

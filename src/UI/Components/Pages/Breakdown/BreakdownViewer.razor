@@ -2,6 +2,10 @@
 @using Domain.Interfaces
 @inject IBreakdownServices _breakdownServices
 @inject IDialogService _dialogService
+@inject IProductServices _productServices
+@inject  IPictureStorageServices _pictureStorageServices
+@inject IOrderServiceProcessing _orderServiceProcessing
+@inject NavigationManager _navigationManager
 
 <link rel="stylesheet" href="UI.styles.css" />
 @if (_isLoading)
@@ -13,7 +17,7 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="text-black">
-                    Aguarde um momento estamos enquanto carregando as informações...
+                    @_loadingMessage
                 </p>
             </div>
         </div>
@@ -21,77 +25,208 @@
 }
 else
 {
-    <FluentTabs ActiveTabId="tab-1">
-        <FluentTab Id="tab-1">
-            <Header>
-                <FluentIcon Value="@(new Icons.Regular.Size16.VehicleCarCollision())" />
-                Veículo
-            </Header>
-            <Content>
-                <div class="mt-5">
-                    <FluentLabel>Informações do veículo</FluentLabel>
-                    <FluentCard>
-                        <FluentTextField @bind-Value="_breakdown.Vehicle!.Model" ReadOnly="true" style="width: 100%;" Label="Modelo"></FluentTextField>
-                        <FluentTextField @bind-Value="_breakdown.Vehicle!.Plate" ReadOnly="true" style="width: 100%;" Label="Placa"></FluentTextField>
-                        <FluentNumberField @bind-Value="_breakdown.OdometerStart" ReadOnly="true" style="width: 100%;" Label="Odômetro inicial"></FluentNumberField>
-                        <FluentNumberField @bind-Value="_breakdown.OdometerEnd" ReadOnly="true" style="width: 100%;" Label="Odômetro final"></FluentNumberField>
-                        <FluentTextArea @bind-Value="_breakdown.Description" ReadOnly="true" Label="Descrição" style="width: 100%;"></FluentTextArea>
-                    </FluentCard>
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="false">Home</button>
+        </li>
+        <li class="nav-item" id="collaborators-tab" role="presentation">
+            <button class="nav-link" id="collaborators-tab" data-bs-toggle="tab" data-bs-target="#collaborators" type="button" role="tab" aria-controls="Collaboratos" aria-selected="true">Equipe</button>
+        </li>
+        <li class="nav-item" id="breakdownImages-tab" role="presentation">
+            <button class="nav-link" id="breakdownImages-tab" data-bs-toggle="tab" data-bs-target="#breakdownImages" type="button" role="tab" aria-controls="breakdownImages" aria-selected="true">Imagens</button>
+        </li>
+        <li class="nav-item" id="breakdownImages-tab" role="presentation">
+            <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials" type="button" role="tab" aria-controls="materials" aria-selected="true">Materiais</button>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="card mx-auto mt-5">
+                <div class="card-header">
+                    Informações do veículo
                 </div>
-
-            </Content>
-        </FluentTab>
-        <FluentTab Id="tab-2">
-            <Header>
-                <FluentIcon Value="@(new Icons.Regular.Size16.Person())" Color="@Color.Success" />
-                Colaboradores
-            </Header>
-            <Content>
-                <div class="mt-5">
-                    @if (_breakdown.BreakdownUsers is not null)
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <label class="form-label text-muted">Modelo</label>
+                            <div class="input-group">
+                                <i class="bi bi-car-front input-group-text"></i>
+                                <input type="text" class="form-control" @bind="_breakdown.Vehicle!.Model" readonly placeholder="Modelo">
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="form-label text-muted">Placa</label>
+                            <div class="input-group">
+                                <i class="bi bi-credit-card input-group-text"></i>
+                                <input type="text" class="form-control" @bind="_breakdown.Vehicle!.Plate" readonly placeholder="Placa">
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="form-label text-muted">Odômetro inicial</label>
+                            <div class="input-group">
+                                <i class="bi bi-speedometer2 input-group-text"></i>
+                                <input type="text" class="form-control" @bind="_breakdown.OdometerStart" readonly placeholder="Odômetro inicial">
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label class="form-label text-muted">Odômetro final</label>
+                            <div class="input-group">
+                                <i class="bi bi-speedometer2 input-group-text"></i>
+                                <input type="text" class="form-control" @bind="_breakdown.OdometerEnd" placeholder="Odômetro final">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Data</label>
+                            <div class="input-group">
+                                <i class="bi bi-calendar input-group-text"></i>
+                                <input type="text" class="form-control" value="@_breakdown.CreateAt.ToString("MM/dd/yyyy")" readonly placeholder="Data">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted">Descrição</label>
+                            <textarea class="form-control mb-2" @bind="_breakdown.Description" readonly placeholder="Descrição"></textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center mt-4">
+                        <button type="button" class="btn btn-sm form-control btn-success" @onclick="HandleSubmitAsync">Finalizar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="collaborators" role="tabpanel" aria-labelledby="collaborators-tab">
+            <div class="mt-5">
+                @if (_breakdown.BreakdownUsers is not null)
+                {
+                    @foreach (var breakdownUser in _breakdown.BreakdownUsers)
                     {
-                        @foreach (var breakdownUser in _breakdown.BreakdownUsers)
+                        <FluentPersona Name="@breakdownUser.User!.Name"
+                                       ImageSize="50px"
+                                       Status="PresenceStatus.Available"
+                                       StatusSize="PresenceBadgeSize.Small"
+                                       Style="margin-bottom:10px;">
+                        </FluentPersona>
+                    }
+                }
+            </div>
+        </div>
+        <div class="tab-pane" id="breakdownImages" role="tabpanel" aria-labelledby="collaborators-tab">
+            <div class="mt-5">
+                <button type="button" class="btn btn-sm btn-success ms-3 mb-5" @onclick="TakePhoto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                        <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z" />
+                    </svg>
+                    Adicionar imagem
+                </button>
+                @if (_breakdown.BreakdownImages is not null)
+                {
+                    <div id="fullscreen" class="fullscreen">
+                        <img id="fullscreenImage">
+                        <button class="close-button" onclick="closeFullscreen()">X</button>
+                    </div>
+                    <div class="row mx-auto mb-4">
+                        @foreach (var picture in _breakdown.BreakdownImages)
                         {
-                            <FluentPersona Name="@breakdownUser.User!.Name"
-                                           ImageSize="50px"
-                                           Status="PresenceStatus.Available"
-                                           StatusSize="PresenceBadgeSize.Small"
-                                           Style="margin-bottom:10px;">
-                            </FluentPersona>
-                        }
-                    }
-                </div>
-
-            </Content>
-        </FluentTab>
-        <FluentTab Id="tab-3">
-            <Header>
-                <FluentIcon Value="@(new Icons.Regular.Size16.Image())" Color="@Color.Info" />
-                <span style="color:forestgreen;">Imagens</span>
-            </Header>
-            <Content>
-                <div class="mt-5">
-                    @if (_breakdown.BreakdownImages is not null)
-                    {
-                        <div id="fullscreen" class="fullscreen">
-                            <img id="fullscreenImage">
-                            <button class="close-button" onclick="closeFullscreen()">X</button>
-                        </div>
-                        <div class="row mx-auto mb-4">
-                            @foreach (var picture in _breakdown.BreakdownImages)
-                            {
-                                <div class="col-4">
-                                    <div class="position-relative">
-                                        <img src="data:image/png;base64,@picture.Image" class="bd-placeholder-img img-thumbnail" width="80" height="80" title="Image" @onclick="(() => OpenImageViewer(picture.Image))" />
-                                    </div>
+                            <div class="col-4">
+                                <div class="position-relative">
+                                    <img src="data:image/png;base64,@picture.Image" class="bd-placeholder-img img-thumbnail" width="80" height="80" title="Image" @onclick="(() => OpenImageViewer(picture.Image))" />
                                 </div>
+                            </div>
+                        }
+                        @foreach (var pictureViewModel in _pictureViewModelList)
+                        {
+                            <div class="col-4">
+                                <div class="position-relative">
+                                    <img src="data:image/png;base64,@pictureViewModel.Content" class="bd-placeholder-img img-thumbnail" width="80" height="80" title="Image" />
+                                    <button class="position-absolute top-0 btn btn-danger btn-sm" @onclick="(() => RemovePhoto(pictureViewModel.Id))">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                            <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="tab-pane" id="materials" role="tabpanel" aria-labelledby="materials-tab">
+            <div class="mt-5">
+                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalAddProduct">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                        <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 0 1 1-1z" />
+                    </svg>
+                    Adicionar material
+                </button>
+                <div class="mt-5">
+                    <table class="table table-borderless">
+                        <thead>
+                            <tr class="text-black">
+                                <th>Nome</th>
+                                <th>Descrição</th>
+                                <th>Quantidade</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var product in _productsList)
+                            {
+                                <tr>
+                                    <td>@product.Name</td>
+                                    <td>@product.Description</td>
+                                    <td>@product.Quantity un</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger" @onclick="(() => OnMaterialRemove(product))">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
                             }
-                        </div>
-                    }
+                        </tbody>
+                    </table>
                 </div>
-            </Content>
-        </FluentTab>
-    </FluentTabs>
+                <!-- Modal -->
+                <div class="modal fade" id="modalAddProduct" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header" style="border:none;">
+                                <h1 class="modal-title fs-5" id="modalAddProductLabel">Adicionar material</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" style="border:none;">
+                                <label class="form-label text-muted">Material</label>
+                                <div class="input-group mb-3">
+                                    <i class="bi bi-box input-group-text"></i>
+                                    @* <input type="text" class="form-control" placeholder="Material"> *@
+                                    <select class="form-select" aria-label="Default select example" @onchange="OnMaterialChanged">
+                                        <option value="0" selected>Selecione...</option>
+                                        @foreach (var product in _products)
+                                        {
+                                            <option value="@product.ProductId">@product.Name @product.Description</option>
+                                        }
+                                    </select>
+                                </div>
+                                <label class="form-label text-muted">Quantidade</label>
+                                <div class="input-group mb-3">
+                                    <i class="bi bi-box input-group-text"></i>
+                                    <input type="number" class="form-control" @bind="_productViewModel.Quantity" @bind:event="oninput" @onchange="OnQuantityChanged" placeholder="Quantidade">
+                                    <span class="input-group-text">un</span>
+                                </div>
+
+                                <div class="modal-footer" style="border:none;">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" disabled="@(!_formIsValid)" data-bs-dismiss="modal" @onclick="OnMaterialConfirm">Confirmar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 

@@ -2,6 +2,7 @@
 @using Domain.Interfaces
 @inject IBreakdownServices _breakdownServices
 @inject NavigationManager _navigationManager
+<link href="UI.styles.css" rel="stylesheet" />
 @if (_isLoading)
 {
     <div class="spacing mx-auto">
@@ -19,7 +20,66 @@
 }
 else
 {
-    <FluentLabel>Avarias cadastradas</FluentLabel>
+    <div class="container">
+        <h3 class="mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-truck-flatbed" viewBox="0 0 16 16">
+                <path d="M11.5 4a.5.5 0 0 1 .5.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-4 0 1 1 0 0 1-1-1v-1h11V4.5a.5.5 0 0 1 .5-.5M3 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2m9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2m1.732 0h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4a2 2 0 0 1 1.732 1" />
+            </svg>
+            Avarias cadastradas
+        </h3>
+@*         <button type="button" class="btn btn-sm btn-success mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 0 1 0 2H9v6a1 1 0 0 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z" />
+            </svg>
+        </button> *@
+        <table class="table table-borderless">
+            <thead>
+                <tr style="background-color: #198754" class="text-white">
+                    <th>Veículo</th>
+                    <th>Data</th>
+                    <th>Odômetro</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var breakdown in _breakdownsList)
+                {
+                    <tr>
+                        <td>@breakdown.Vehicle!.Model</td>
+                        <td>@breakdown.CreateAt.ToString("dd/MM")</td>
+                        <td>@breakdown.OdometerStart</td>
+                        <td class="d-flex">
+                            <button class="btn btn-sm btn-neutral mr-1" @onclick="(() => BreakdownDetails(breakdown.BreakdownId))">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#6c757d" class="bi bi-file-text-fill" viewBox="0 0 16 16">
+                                    <path d="M12 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M5 4h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5M5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1m0 2h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1" />
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <label class="form-label">Total de registros: <strong>@_breakdownsList.Count</strong></label>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination pagination-sm justify-content-end">
+                <li class="page-item text-success">
+                    <a class="page-link text-success" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item text-success"><a class="page-link text-success" ref="#">1</a></li>
+                <li class="page-item text-success"><a class="page-link text-success" ref="#">2</a></li>
+                <li class="page-item text-success"><a class="page-link text-success" href="#">3</a></li>
+                <li class="page-item text-success">
+                    <a class="page-link text-success" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    @* <FluentLabel>Avarias cadastradas</FluentLabel>
     <div class="mx-auto mt-5 mb-3">
         <FluentDataGrid Pagination="_pagination" Items="_breakdownsList.AsQueryable()">
             <PropertyColumn Title="Veículo" Property='x => x.Vehicle!.Model + " " +  x.Vehicle.Plate' Sortable="true" Align="Align.Start" Tooltip="true" style="width:100%" />
@@ -30,8 +90,11 @@ else
                 <FluentButton OnClick="(() => BreakdownDetails(breakdown.BreakdownId))">
                     <FluentIcon Value="@(new Icons.Regular.Size20.DocumentOnePage())" Color="Color.Accent" Title="Visualizar" />
                 </FluentButton>
+                <FluentButton OnClick="(() => BreakdownDetails(breakdown.BreakdownId))">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.CheckmarkSquare())" Color="Color.Success" Title="Visualizar" />
+                </FluentButton>
             </TemplateColumn>
         </FluentDataGrid>
         <FluentPaginator State="_pagination"></FluentPaginator>
-    </div>
+    </div> *@
 }

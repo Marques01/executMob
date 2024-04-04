@@ -164,7 +164,7 @@ namespace Infrastructure.Services
             }
             catch (Exception ex)
             {
-               throw new Exception(ex.Message);
+                throw new Exception(ex.Message);
             }
         }
 
@@ -202,6 +202,47 @@ namespace Infrastructure.Services
             {
                 throw new ArgumentException(arg.Message);
             }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<BreakdownResponseModel> UpdateAsync(BreakdownCostumerUpdateModel breakdown)
+        {
+            try
+            {
+                await _headersMethods.SetTokenHeaderAuthorizationAsync();
+
+                string jsonData = JsonSerializer.Serialize(breakdown);
+
+                var httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/breakdown/change", httpContent);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                var responseModel = JsonSerializer.Deserialize<BreakdownResponseModel>(content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (responseModel is not null)
+                {
+                    if (responseModel.StatusCode == HttpStatusCode.InternalServerError)
+                        throw new Exception(responseModel.Message);
+
+                    if (responseModel.StatusCode == HttpStatusCode.BadRequest)
+                        throw new ArgumentException(responseModel.Message);
+
+                    return responseModel;
+                }
+
+                throw new Exception("Erro ao tentar atualizar a avaria.");
+            }
+            catch (ArgumentException arg)
+            {
+                throw new ArgumentException(arg.Message);
+            }
+
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);

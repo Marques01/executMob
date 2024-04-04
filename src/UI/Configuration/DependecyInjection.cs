@@ -59,6 +59,12 @@ namespace UI.Configuration
                 x.BaseAddress = new Uri("http://189.105.213.202:5000/");
                 x.DefaultRequestHeaders.Add("Accept", "application/json");
             });
+
+            services.AddHttpClient<IProductServices, ProductServices>(x =>
+            {
+                x.BaseAddress = new Uri("http://189.105.213.202:5000/");
+                x.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
         }
     }
 }

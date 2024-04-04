@@ -228,9 +228,9 @@ namespace UI.Components.Pages.Breakdown
         {
             if (MediaPicker.Default.IsCaptureSupported)
             {
-                FileResult photo = await MediaPicker.Default.CapturePhotoAsync();
+                FileResult? photo = await MediaPicker.Default.CapturePhotoAsync();
 
-                if (photo != null)
+                if (photo is not null)
                 {
                     using Stream sourceStream = await photo.OpenReadAsync();
 

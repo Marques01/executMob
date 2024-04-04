@@ -1,7 +1,11 @@
-﻿html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+﻿html, body, input, textarea, button, table {
+    font-family: Comfortaa;
 }
-
+/**/
+/*@font-face {
+    font-family: 'Comfortaa';
+    src: url('fonts/Comfortaa/Comfortaa-VariableFont_wght.ttf')
+}*/
 a, .btn-link {
     color: #006bb7;
 }

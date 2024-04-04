@@ -4,25 +4,27 @@
 @inject IJSRuntime _js
 @inject IDialogService _dialogServices
 @inject NavigationManager _navigationManager
-
+<link rel="stylesheet" href="UI.styles.css" />
 <AuthorizeView>
     <Authorized>
-        <div class="p-4 m-0 border-0 bd-example">
-            <div class="mb-5">
-                <NavMenu></NavMenu>
+        <body>
+            <div class="p-4 m-0 border-0 bd-example">
+                <div class="mb-5">
+                    <NavMenu></NavMenu>
+                </div>
+                <div class="content">
+                    @Body
+                    <FluentDialogProvider />
+                    <FluentTooltipProvider />
+                </div>
             </div>
-            <div class="content">
-                @Body
-                <FluentDialogProvider/>
-                <FluentTooltipProvider/>
-            </div>
-        </div>
+        </body>
     </Authorized>
 
     <NotAuthorized>
-        <FluentDialogProvider/>
-        <FluentTooltipProvider/>
-        <Login/>
+        <FluentDialogProvider />
+        <FluentTooltipProvider />
+        <Login />
     </NotAuthorized>
 </AuthorizeView>
 
