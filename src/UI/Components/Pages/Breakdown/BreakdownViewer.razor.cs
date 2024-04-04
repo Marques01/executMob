@@ -194,7 +194,8 @@ public partial class BreakdownViewer
                 OrderServiceProductCostumerModel productCostumerModel = new()
                 {
                     ProductId = product.ProductId,
-                    Quantity = product.Quantity,                    
+                    Quantity = product.Quantity,
+                    Description = "Default",
                     OrderServiceId = _breakdown.OrderService!.OrderServiceId
                 };
 
