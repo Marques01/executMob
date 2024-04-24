@@ -127,8 +127,12 @@ namespace Infrastructure.Services
             try
             {
                 _httpClient.DefaultRequestHeaders.Authorization = await _headersMethods.SetTokenHeaderAuthorizationAsync();
-                
-                var response = await _httpClient.PutAsync($"api/OrderService/CloseOS/{id}", null);
+
+                string json = $"{{\"id\": {id}}}";
+
+                HttpContent httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/OrderService/CloseOS/{id}", httpContent);
 
                 string content = await response.Content.ReadAsStringAsync();
 
