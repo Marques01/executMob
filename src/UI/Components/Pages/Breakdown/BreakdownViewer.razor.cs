@@ -17,7 +17,8 @@ public partial class BreakdownViewer
         _formIsValid = false;
 
     private string
-        _loadingMessage = string.Empty;
+        _loadingMessage = string.Empty,
+        _base64 = string.Empty;
 
     private Domain.Entities.Breakdown _breakdown = new();
 
@@ -38,6 +39,8 @@ public partial class BreakdownViewer
         await GetBreakdownAsync();
 
         await GetProductsAsync();
+
+        await GetImageAsync();
 
         _isLoading = false;
     }
@@ -69,6 +72,15 @@ public partial class BreakdownViewer
         catch (Exception ex)
         {
             await _dialogService.ShowErrorAsync(ex.Message, "Erro");
+        }
+    }
+
+    private async Task GetImageAsync()
+    {
+        foreach (var breakdownImage in _breakdown.BreakdownImages!)
+        {
+            _base64 = await _pictureStorageServices.GetBase64Async(breakdownImage.Image);
+            breakdownImage.Image = _base64;
         }
     }
 
@@ -195,7 +207,7 @@ public partial class BreakdownViewer
                 {
                     ProductId = product.ProductId,
                     Quantity = product.Quantity,
-                    Description = "Default",
+                    Description = "Material Retorno",
                     OrderServiceId = _breakdown.OrderService!.OrderServiceId
                 };
 

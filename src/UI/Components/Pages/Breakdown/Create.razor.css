@@ -11,24 +11,10 @@
         margin-top: 150px;
         margin-bottom: 1px;
     }
-
-    .btn-primary {
-        width: 500px !important;
     }
-    .btn-secondary {
-        width: 500px !important;
-    }
-}
 
 @media (max-width: 876px) {
     .spacing {
         margin-top: 45%;
-    }
-
-    .btn-primary {
-        width: 125px !important;
-    }
-    .btn-secondary {
-        width: 125px !important;
     }
 }

@@ -21,36 +21,6 @@ namespace Infrastructure.Services
             _jsRuntime = jsRuntime;
         }
 
-        public Task CreateAsync(User user)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateAsync(User user)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> UserExistingAsync(string login)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<User> GetUserByIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<User> SignInAsync(string login, string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<User> GetUserByLoginAsync(string mail)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<IEnumerable<User>> GetUsersAsync()
         {
             try

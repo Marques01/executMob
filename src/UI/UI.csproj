@@ -12,7 +12,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>UI</ApplicationTitle>
+		<ApplicationTitle>ECOMIX</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.ui</ApplicationId>
@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
-	  <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+	  <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
 	  <AndroidKeyStore>False</AndroidKeyStore>
 	  <DebugSymbols>True</DebugSymbols>
 	</PropertyGroup>
@@ -40,7 +40,7 @@
 	  <AndroidKeyStore>False</AndroidKeyStore>
 	  <Optimize>False</Optimize>
 	  <DebugSymbols>False</DebugSymbols>
-	  <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+	  <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows10.0.19041.0|AnyCPU'">

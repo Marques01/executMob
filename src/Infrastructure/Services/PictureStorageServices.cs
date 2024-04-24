@@ -57,5 +57,28 @@ namespace Infrastructure.Services
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<string> GetBase64Async(string pictureName)
+        {
+            try
+            {
+                await _headersMethods.SetTokenHeaderAuthorizationAsync();
+
+                var response = await _httpClient.GetAsync("content/" + pictureName);
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception("Ocorreu um erro ao obter a imagem solicitada");
+
+                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+
+                string base64 = Convert.ToBase64String(imageBytes);
+
+                return base64;
+            }
+            catch (Exception)
+            {
+                throw new Exception("Ocorreu um erro ao obter a imagem solicitada");
+            }
+        }
     }
 }

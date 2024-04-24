@@ -18,3 +18,8 @@
     border: none;
     cursor: pointer;
 }
+
+@page {
+    margin: 0;
+    background-color: #f5f5f5 !important; /* Substitua pela cor desejada */
+}

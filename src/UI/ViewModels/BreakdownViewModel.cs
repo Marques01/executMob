@@ -11,6 +11,6 @@ namespace UI.ViewModels
         public int OdometerStart { get; set; }
 
         [Required]
-        public string Description { get; set; } = string.Empty;
+        public string Description { get; set; } = "N/A";
     }
 }

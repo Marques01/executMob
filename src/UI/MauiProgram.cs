@@ -21,7 +21,11 @@ namespace UI
                 options.HostingModel = BlazorHostingModel.Hybrid;
                 options.UseTooltipServiceProvider = true;
             });
-            DependecyInjection.ApplyConfigurations(builder.Services);
+
+            //builder.Configuration.AddJsonFile("appsettings.json").Build();
+            //string uri = builder.Configuration.GetSection("Services:URL").Value!;
+            string uri = "http://179.66.149.106:5000/";
+            DependecyInjection.ApplyConfigurations(builder.Services, uri);
 
             builder.Services.AddOptions();
 

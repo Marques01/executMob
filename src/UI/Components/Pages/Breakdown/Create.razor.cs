@@ -18,7 +18,8 @@ namespace UI.Components.Pages.Breakdown
             _showValidationOdometer = false,
             _showValidationEmployee = false,
             _showValidationDescription = false,
-            _showValidationVehicle = false;
+            _showValidationVehicle = false,
+            _formIsValid = false;
 
         private string
             _inputOdometerClass = string.Empty,
@@ -38,6 +39,12 @@ namespace UI.Components.Pages.Breakdown
 
         private EditContext? _editContext;
 
+        private ProductViewModel _productViewModel = new();
+
+        private IEnumerable<Product> _products = Enumerable.Empty<Product>();
+
+        private List<ProductViewModel> _productsList = new();
+
         protected override async Task OnInitializedAsync()
         {
             _editContext = new(_breakdownViewModel);
@@ -47,6 +54,8 @@ namespace UI.Components.Pages.Breakdown
             await GetVehiclesAsync();
 
             await GetUsersAsync();
+
+            await GetProductsAsync();
 
             _isLoading = false;
         }
@@ -163,6 +172,17 @@ namespace UI.Components.Pages.Breakdown
 
             ValidationEmployeeMessage();
         }
+        private async Task GetProductsAsync()
+        {
+            try
+            {
+                _products = await _productServices.GetProductsAsync();
+            }
+            catch (Exception ex)
+            {
+                await _dialogServices.ShowErrorAsync(ex.Message, "Erro");
+            }
+        }
 
         private async Task HandleSubmit()
         {
@@ -170,10 +190,13 @@ namespace UI.Components.Pages.Breakdown
             {
                 ValidationAllFields();
 
-                if (_pictureViewModelList.Count < 5)
-                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens da frente, laterais e traseira do veículo, juntamente com a captura do odômetro. Este procedimento é obrigatório para prosseguir.");
+                if (_pictureViewModelList.Count < 2)
+                    throw new ArgumentException("É de extrema importância seguir as orientações de envio. Não se esqueça de anexar imagens dos materiais, juntamente com a captura de uma selfie. Este procedimento é obrigatório para prosseguir.");
 
-                if (_editContext is not null && _editContext.Validate() && _pictureViewModelList.Count == 5)
+                if (_productsList.Count() == 0)
+                    throw new ArgumentException("É necessário adicionar ao menos um material para prosseguir.");
+
+                if (_editContext is not null && _editContext.Validate() && _pictureViewModelList.Count >= 2)
                 {
                     _isLoading = true;
 
@@ -199,7 +222,23 @@ namespace UI.Components.Pages.Breakdown
                         await _breakdownServices.AssociateUser(costumerModel);
                     }
 
-                    await CreateOrderServiceAsync(breakdown);
+                    var orderServiceResponseModel = await CreateOrderServiceAsync(breakdown);
+
+                    if (orderServiceResponseModel is not null && orderServiceResponseModel.Model is not null)
+                    {
+                        foreach (var product in _productsList)
+                        {
+                            OrderServiceProductCostumerModel productCostumerModel = new()
+                            {
+                                ProductId = product.ProductId,
+                                Quantity = product.Quantity,
+                                Description = "Material Saída",
+                                OrderServiceId = orderServiceResponseModel.Model.OrderServiceId
+                            };
+
+                            await AddProductAsync(productCostumerModel);
+                        }
+                    }
 
                     var dialogReference = await _dialogServices.ShowSuccessAsync("Avaria cadastrada com sucesso!", "Sucesso");
 
@@ -222,6 +261,14 @@ namespace UI.Components.Pages.Breakdown
                 await ShowErrorAsync(ex.Message, "Atenção");
                 return;
             }
+        }
+
+        private async Task<OrderServiceProductResponseModel> AddProductAsync(
+            OrderServiceProductCostumerModel orderServiceProduct)
+        {
+            var productResponseModel = await _orderServiceProcessing.AddProductAsync(orderServiceProduct);
+
+            return productResponseModel;
         }
 
         public async Task TakePhoto()
@@ -322,5 +369,52 @@ namespace UI.Components.Pages.Breakdown
         }
 
         private async Task ShowErrorAsync(string message, string? title = null) => await _dialogServices.ShowErrorAsync(message, title);
+
+        #region Events
+
+        private void OnMaterialChanged(ChangeEventArgs e)
+        {
+            string materialId = e.Value!.ToString()!;
+            _productViewModel.ProductId = int.Parse(materialId);
+            FormIsValid();
+        }
+
+        private void OnQuantityChanged(ChangeEventArgs e)
+        {
+            string quantity = e.Value!.ToString()!;
+            _productViewModel.Quantity = int.Parse(quantity);
+            FormIsValid();
+        }
+
+        private void OnMaterialConfirm()
+        {
+            if (_formIsValid)
+            {
+                var product = _products.FirstOrDefault(x => x.ProductId == _productViewModel.ProductId);
+
+                if (product is not null)
+                {
+                    _productsList.Add(new()
+                    {
+                        Name = product.Name,
+                        Description = product.Description,
+                        Quantity = _productViewModel.Quantity,
+                        ProductId = product.ProductId
+                    });
+                }
+            }
+
+            _productViewModel = new();
+            FormIsValid();
+        }
+
+        private void OnMaterialRemove(ProductViewModel product)
+        {
+            _productsList.Remove(product);
+        }
+
+        private void FormIsValid() => _formIsValid = _productViewModel.ProductId > 0 && _productViewModel.Quantity > 0;
+
+        #endregion
     }
 }
